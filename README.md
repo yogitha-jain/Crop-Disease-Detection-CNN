@@ -1,7 +1,6 @@
 🌾 Crop Disease Detection using Computer Vision
-📌 Project Status: Ongoing Internship Project – Week 1 Completed
 
-🎯 Objective
+ bjective
 This project focuses on developing a deep learning based image classification system that can automatically identify diseases in crop leaves using Computer Vision techniques. The system is designed to assist farmers in detecting plant health issues at an early stage, enabling faster decisions, reducing yield loss, and minimizing the overuse of chemical treatments. Model performance is measured using accuracy, precision, and recall, with special focus on reducing false negatives in disease detection.
 
 🗂️ Dataset
