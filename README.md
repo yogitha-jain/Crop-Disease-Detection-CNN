@@ -61,3 +61,62 @@ Crop-Disease-Detection/
 
 Conclusion
 This project aims to deliver a reliable and efficient solution for automated crop disease identification, contributing towards smarter agricultural practices and better food security outcomes.
+
+Week 2: Data Augmentation & CNN Architecture (In Progress)
+Framework Switch
+
+Migrated from TensorFlow/Keras to PyTorch for model development
+
+Data Augmentation Pipeline
+Applied the following augmentation techniques to improve model generalization:
+
+Random Horizontal Flip
+Random Vertical Flip
+Random Rotation (±30°)
+Color Jitter (brightness & contrast ±0.3)
+Resize to 224 × 224
+ImageNet Normalization (mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225])
+
+Custom CNN Architecture
+Built a 3-block custom CNN from scratch:
+Layer BlockDetailsConv Block 1Conv2D(3→32) + ReLU + MaxPoolConv Block 2Conv2D(32→64) + ReLU + MaxPoolConv Block 3Conv2D(64→128) + ReLU + MaxPoolFully ConnectedLinear(128×28×28 → 512) + ReLU + Dropout(0.5) + Linear(512→38)
+Training Configuration
+
+Epochs: 10
+Batch Size: 32
+Learning Rate: 0.001
+Loss Function: CrossEntropyLoss
+Optimizer: Adam
+Early Stopping: Patience = 3 (saves best model weights)
+Device: GPU (CUDA) if available, else CPU
+
+Training Outputs (In Progress)
+
+Training & Validation Accuracy/Loss curves saved as training_curves.png
+Best model saved as custom_cnn_plantvillage.pth
+Test accuracy evaluation pending (training in progress)
+
+Tools & Technologies
+
+Python
+PyTorch
+Torchvision
+Matplotlib
+
+
+📁 Project Structure
+Crop-Disease-Detection/
+├── PlantVillage_color/
+├── PlantVillage_split/
+│   ├── train/
+│   ├── val/
+│   └── test/
+├── notebooks/
+│   ├── week1_eda.ipynb
+│   └── week2_ccn.ipynb
+├── training_curves.png
+├── custom_cnn_plantvillage.pth
+└── README.md
+
+Conclusion
+This project aims to deliver a reliable and efficient solution for automated crop disease identification, contributing towards smarter agricultural practices and better food security outcomes.
