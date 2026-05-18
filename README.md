@@ -12,8 +12,28 @@ Consists of labeled leaf images covering both healthy and infected plant conditi
 Spans across several crop varieties with numerous disease classifications
 
 
- Week 1: Image Acquisition, EDA & Preprocessing
- Data Loading
+📁 Project Structure
+Crop-Disease-Detection-CNN/
+│
+├── week1_eda.ipynb                     ← EDA, preprocessing pipeline
+├── week2_ccn.ipynb                     ← Custom CNN training
+├── week3_transfer_learning.ipynb       ← MobileNetV2 transfer learning
+├── week4_confisionMatrix.ipynb         ← Confusion matrix & evaluation
+├── week4_interface.ipynb               ← Inference script
+│
+├── app.py                              ← Flask web application backend
+├── templates/
+│   └── index.html                      ← Frontend UI (LeafScan)
+│
+├── confusion_matrix.png                ← Week 4 evaluation output
+├── training_curves.png                 ← Week 2 training curves
+├── transfer_learning_curves.png        ← Week 3 training curves
+│
+├── .gitignore                          ← Excludes large .pth model files
+└── README.md
+
+Week 1: Image Acquisition, EDA & Preprocessing
+Data Loading
 
 Accessed dataset from local system directory
 Confirmed class-wise folder organization and image availability
@@ -33,89 +53,99 @@ Train (70%)
 Validation (15%)
 Test (15%)
 
- Preprocessing Pipeline
-
-Systematic dataset partitioning using image generators
-Pipeline built using TensorFlow for efficient data loading
-Pixel normalization and batch prefetching applied for optimized performance
+Tools & Technologies
+Python PyTorch Torchvision NumPy Matplotlib PIL
 
 
- Tools & Technologies
 
-Python
-TensorFlow / Keras
-NumPy
-Matplotlib
-
-
-📁 Project Structure
-Crop-Disease-Detection/
-|── PlantVillage_color/
-|── PlantVillage_split/
-|   |── train/
-|   |── val/
-|   └── test/
-|── notebooks/
-|── README.md
-
-Conclusion
-This project aims to deliver a reliable and efficient solution for automated crop disease identification, contributing towards smarter agricultural practices and better food security outcomes.
-
-Week 2: Data Augmentation & CNN Architecture (In Progress)
-Framework Switch
-
-Migrated from TensorFlow/Keras to PyTorch for model development
-
+Week 2: Data Augmentation & Custom CNN Architecture
+Framework
+PyTorch
 Data Augmentation Pipeline
-Applied the following augmentation techniques to improve model generalization:
-
-Random Horizontal Flip
-Random Vertical Flip
-Random Rotation (±30°)
-Color Jitter (brightness & contrast ±0.3)
-Resize to 224 × 224
-ImageNet Normalization (mean: [0.485, 0.456, 0.406], std: [0.229, 0.224, 0.225])
-
+TechniqueDetailsRandom Horizontal FlipImproves spatial generalizationRandom Vertical FlipHandles varied orientationsRandom Rotation±30°Color JitterBrightness & contrast ±0.3Resize224 × 224NormalizationImageNet mean & std
 Custom CNN Architecture
-Built a 3-block custom CNN from scratch:
 Layer BlockDetailsConv Block 1Conv2D(3→32) + ReLU + MaxPoolConv Block 2Conv2D(32→64) + ReLU + MaxPoolConv Block 3Conv2D(64→128) + ReLU + MaxPoolFully ConnectedLinear(128×28×28 → 512) + ReLU + Dropout(0.5) + Linear(512→38)
 Training Configuration
+ParameterValueEpochs10Batch Size32Learning Rate0.001Loss FunctionCrossEntropyLossOptimizerAdamEarly StoppingPatience = 3DeviceCUDA / CPU
+Outputs
 
-Epochs: 10
-Batch Size: 32
-Learning Rate: 0.001
-Loss Function: CrossEntropyLoss
-Optimizer: Adam
-Early Stopping: Patience = 3 (saves best model weights)
-Device: GPU (CUDA) if available, else CPU
-
-Training Outputs (In Progress)
-
-Training & Validation Accuracy/Loss curves saved as training_curves.png
+Training & Validation curves saved as training_curves.png
 Best model saved as custom_cnn_plantvillage.pth
-Test accuracy evaluation pending (training in progress)
 
 Tools & Technologies
-
-Python
-PyTorch
-Torchvision
-Matplotlib
+Python PyTorch Torchvision Matplotlib
 
 
-📁 Project Structure
-Crop-Disease-Detection/
-├── PlantVillage_color/
-├── PlantVillage_split/
-│   ├── train/
-│   ├── val/
-│   └── test/
-├── notebooks/
-│   ├── week1_eda.ipynb
-│   └── week2_ccn.ipynb
-├── training_curves.png
-├── custom_cnn_plantvillage.pth
-└── README.md
+
+Week 3: Transfer Learning with MobileNetV2
+Approach
+Replaced custom CNN with MobileNetV2 pretrained on ImageNet to achieve higher accuracy through transfer learning.
+Architecture
+ComponentDetailsBase ModelMobileNetV2 (pretrained on ImageNet)Base LayersFrozen — used for feature extraction onlyClassifier HeadDropout(0.5) → Linear(1280→512) → ReLU → Dropout(0.3) → Linear(512→38)
+Training Configuration
+ParameterValueEpochs10Batch Size16Learning Rate0.0001Loss FunctionCrossEntropyLossOptimizerAdam (classifier layers only)SchedulerReduceLROnPlateau (patience=2, factor=0.5)Early StoppingPatience = 3DeviceCPU
+Results
+ModelTest AccuracyCustom CNN (Week 2)~70–75%MobileNetV2 (Week 3)~90%+
+Outputs
+
+Training curves saved as transfer_learning_curves.png
+Best model saved as mobilenet_plantvillage.pth
+Full classification report printed (Precision, Recall, F1 per class)
+
+Tools & Technologies
+Python PyTorch Torchvision scikit-learn Matplotlib
+
+
+
+Week 4: Evaluation, Inference & Deployment
+Confusion Matrix
+
+Generated confusion matrix across all 38 classes on the test set
+Identified most confused class pairs (visually similar diseases)
+Saved as confusion_matrix.png
+
+Inference Script
+
+Takes any raw unseen leaf image as input
+Loads trained MobileNetV2 weights
+Outputs:
+
+Predicted disease name
+Confidence score (%)
+Top 5 predictions
+
+
+
+Flask Web Application — LeafScan
+Built a complete web app connecting the trained model to a browser-based UI.
+How to run:
+bashpip install flask torch torchvision pillow scikit-learn
+python app.py
+Then open: http://localhost:5000
+Features:
+
+Drag and drop leaf image upload
+Instant disease prediction with confidence score
+Top 5 predictions displayed
+Health status indicator (Healthy ✅ / Diseased ⚠️)
+Treatment recommendation
+
+Note on Model Weights
+Model .pth files are excluded from the repository via .gitignore due to GitHub's 100MB file size limit (model is ~600MB). In production, weights would be hosted on cloud storage (Google Drive / AWS S3).
+Tools & Technologies
+Python PyTorch Flask HTML/CSS/JavaScript scikit-learn seaborn
+
+
+🔑 Key Techniques Used
+
+Data Augmentation — Random flips, rotations, color jitter
+Transfer Learning — MobileNetV2 pretrained on ImageNet
+Early Stopping — Prevents overfitting, saves best weights
+LR Scheduling — ReduceLROnPlateau
+Checkpointing — Resume training after interruption
+Confusion Matrix — Identifies misclassification patterns
+Web Deployment — Flask backend + HTML/CSS/JS frontend
+
 
 Conclusion
-This project aims to deliver a reliable and efficient solution for automated crop disease identification, contributing towards smarter agricultural practices and better food security outcomes.
+This project delivers a reliable and efficient solution for automated crop disease identification using deep learning. The final MobileNetV2 model achieves 90%+ accuracy across 38 plant disease classes and is deployed as a web application accessible via any browser — contributing towards smarter agricultural practices and better food security outcomes.
