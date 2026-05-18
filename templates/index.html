@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Plant Disease Detector</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:      #2d6a4f;
+      --green-light:#52b788;
+      --green-pale: #d8f3dc;
+      --red:        #c1121f;
+      --red-pale:   #ffe5e7;
+      --yellow:     #e9c46a;
+      --bg:         #f8faf7;
+      --card:       #ffffff;
+      --text:       #1b1b1b;
+      --muted:      #6b7280;
+      --border:     #e2e8e0;
+      --radius:     16px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--green);
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    header .logo { font-size: 28px; }
+    header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+    header p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+      margin-top: 2px;
+    }
+
+    /* ── Main Layout ── */
+    main {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 640px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+    }
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    /* ── Upload Zone ── */
+    #drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    #drop-zone:hover, #drop-zone.drag-over {
+      border-color: var(--green-light);
+      background: var(--green-pale);
+    }
+    #drop-zone .icon { font-size: 40px; margin-bottom: 10px; }
+    #drop-zone p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+    #drop-zone strong { color: var(--green); }
+    #file-input { display: none; }
+
+    /* ── Preview ── */
+    #preview-wrap { display: none; margin-top: 16px; }
+    #preview-wrap img {
+      width: 100%;
+      border-radius: 10px;
+      object-fit: cover;
+      max-height: 220px;
+    }
+    #file-name {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    /* ── Analyze Button ── */
+    #analyze-btn {
+      width: 100%;
+      margin-top: 18px;
+      padding: 14px;
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      display: none;
+    }
+    #analyze-btn:hover { background: #1f4d39; }
+    #analyze-btn:active { transform: scale(0.98); }
+    #analyze-btn:disabled { background: var(--muted); cursor: not-allowed; }
+
+    /* ── Result Panel ── */
+    #result-panel { display: none; }
+
+    /* Status Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 99px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .status-badge.healthy  { background: var(--green-pale); color: var(--green); }
+    .status-badge.diseased { background: var(--red-pale);   color: var(--red);   }
+
+    /* Main Prediction */
+    .prediction-main {
+      margin-bottom: 20px;
+    }
+    .prediction-main .plant-name {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .prediction-main .disease-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    /* Confidence Bar */
+    .confidence-wrap { margin-bottom: 24px; }
+    .confidence-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .confidence-label span:last-child {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 15px;
+    }
+    .bar-track {
+      height: 8px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: var(--green-light);
+      transition: width 0.8s cubic-bezier(.4,0,.2,1);
+      width: 0%;
+    }
+    .bar-fill.diseased { background: var(--red); }
+
+    /* Top 5 */
+    .top5-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .top5-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .top5-item:last-child { border-bottom: none; }
+    .top5-item .rank {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      color: var(--muted);
+      width: 20px;
+    }
+    .top5-item .label { flex: 1; padding: 0 10px; color: var(--text); }
+    .top5-item .pct {
+      font-weight: 600;
+      color: var(--green);
+    }
+    .top5-item:first-child .pct { color: var(--green); font-size: 14px; }
+
+    /* Loading spinner */
+    #loading {
+      display: none;
+      text-align: center;
+      padding: 40px 0;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--border);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { color: var(--muted); font-size: 14px; }
+
+    /* Error */
+    #error-msg {
+      display: none;
+      background: var(--red-pale);
+      color: var(--red);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 14px;
+      margin-top: 12px;
+    }
+
+    /* Reset */
+    #reset-btn {
+      margin-top: 16px;
+      width: 100%;
+      padding: 11px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    #reset-btn:hover { border-color: var(--green); color: var(--green); }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🌿</div>
+  <div>
+    <h1>Plant Disease Detector</h1>
+    <p>MobileNetV2 · PlantVillage · 38 Classes · Deep Learning</p>
+  </div>
+</header>
+
+<main>
+  <!-- LEFT: Upload -->
+  <div class="card">
+    <div class="card-title">Upload Leaf Image</div>
+
+    <div id="drop-zone">
+      <div class="icon">📷</div>
+      <p>Drag & drop a leaf image here<br>or <strong>click to browse</strong></p>
+      <input type="file" id="file-input" accept="image/*"/>
+    </div>
+
+    <div id="preview-wrap">
+      <img id="preview-img" src="" alt="Preview"/>
+      <div id="file-name"></div>
+    </div>
+
+    <button id="analyze-btn">🔍 Analyze Disease</button>
+    <div id="error-msg"></div>
+  </div>
+
+  <!-- RIGHT: Result -->
+  <div class="card">
+    <div class="card-title">Detection Result</div>
+
+    <!-- Placeholder -->
+    <div id="placeholder" style="text-align:center; padding: 50px 0; color: var(--muted);">
+      <div style="font-size:48px; margin-bottom:12px;">🍃</div>
+      <p style="font-size:14px;">Upload a leaf image<br>to see the diagnosis</p>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading">
+      <div class="spinner"></div>
+      <p>Analyzing leaf...</p>
+    </div>
+
+    <!-- Result -->
+    <div id="result-panel">
+      <div id="status-badge" class="status-badge"></div>
+
+      <div class="prediction-main">
+        <div class="plant-name" id="plant-name"></div>
+        <div class="disease-name" id="disease-name"></div>
+      </div>
+
+      <div class="confidence-wrap">
+        <div class="confidence-label">
+          <span>Confidence</span>
+          <span id="conf-text"></span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="conf-bar"></div>
+        </div>
+      </div>
+
+      <div class="top5-title">Top 5 Predictions</div>
+      <div id="top5-list"></div>
+
+      <button id="reset-btn">↩ Analyze Another Image</button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Crop Disease Detection · MobileNetV2 Transfer Learning · PlantVillage Dataset
+</footer>
+
+<script>
+  const dropZone    = document.getElementById('drop-zone');
+  const fileInput   = document.getElementById('file-input');
+  const previewWrap = document.getElementById('preview-wrap');
+  const previewImg  = document.getElementById('preview-img');
+  const fileName    = document.getElementById('file-name');
+  const analyzeBtn  = document.getElementById('analyze-btn');
+  const errorMsg    = document.getElementById('error-msg');
+  const placeholder = document.getElementById('placeholder');
+  const loading     = document.getElementById('loading');
+  const resultPanel = document.getElementById('result-panel');
+  const resetBtn    = document.getElementById('reset-btn');
+
+  let selectedFile = null;
+
+  // Click to browse
+  dropZone.addEventListener('click', () => fileInput.click());
+
+  // Drag & drop
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) handleFile(file);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+
+  function handleFile(file) {
+    selectedFile = file;
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+    fileName.textContent = file.name;
+    previewWrap.style.display = 'block';
+    analyzeBtn.style.display  = 'block';
+    errorMsg.style.display    = 'none';
+    // Reset result
+    placeholder.style.display  = 'block';
+    resultPanel.style.display  = 'none';
+    loading.style.display      = 'none';
+  }
+
+  analyzeBtn.addEventListener('click', async () => {
+    if (!selectedFile) return;
+
+    // Show loading
+    placeholder.style.display  = 'none';
+    resultPanel.style.display  = 'none';
+    loading.style.display      = 'block';
+    analyzeBtn.disabled        = true;
+    errorMsg.style.display     = 'none';
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const res  = await fetch('/predict', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (data.error) throw new Error(data.error);
+
+      // Populate result
+      const badge = document.getElementById('status-badge');
+      if (data.is_healthy) {
+        badge.textContent  = '✅ Plant is Healthy';
+        badge.className    = 'status-badge healthy';
+      } else {
+        badge.textContent  = '⚠️ Disease Detected';
+        badge.className    = 'status-badge diseased';
+      }
+
+      document.getElementById('plant-name').textContent   = '🌱 ' + data.plant;
+      document.getElementById('disease-name').textContent = data.disease;
+      document.getElementById('conf-text').textContent    = data.confidence + '%';
+
+      const bar = document.getElementById('conf-bar');
+      bar.className = 'bar-fill' + (data.is_healthy ? '' : ' diseased');
+      setTimeout(() => { bar.style.width = data.confidence + '%'; }, 100);
+
+      // Top 5
+      const list = document.getElementById('top5-list');
+      list.innerHTML = '';
+      data.top5.forEach((item, i) => {
+        const div = document.createElement('div');
+        div.className = 'top5-item';
+        div.innerHTML = `
+          <span class="rank">${i + 1}</span>
+          <span class="label">${item.plant} — ${item.disease}</span>
+          <span class="pct">${item.confidence}%</span>
+        `;
+        list.appendChild(div);
+      });
+
+      loading.style.display      = 'none';
+      resultPanel.style.display  = 'block';
+
+    } catch (err) {
+      loading.style.display   = 'none';
+      placeholder.style.display = 'block';
+      errorMsg.style.display  = 'block';
+      errorMsg.textContent    = '❌ Error: ' + err.message;
+    }
+
+    analyzeBtn.disabled = false;
+  });
+
+  resetBtn.addEventListener('click', () => {
+    selectedFile             = null;
+    fileInput.value          = '';
+    previewWrap.style.display = 'none';
+    analyzeBtn.style.display  = 'none';
+    resultPanel.style.display = 'none';
+    placeholder.style.display = 'block';
+    errorMsg.style.display    = 'none';
+    document.getElementById('conf-bar').style.width = '0%';
+  });
+</script>
+
+</body>
+</html>
